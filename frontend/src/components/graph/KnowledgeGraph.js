@@ -9,7 +9,7 @@ export function KnowledgeGraph() {
   const svgRef = useRef(null);
   const { nodes, links, setSelectedNode, selectedNode } = useGraphStore();
   const [zoom, setZoom] = useState(1);
-  
+
   // Function to handle zoom in/out
   const handleZoom = (direction) => {
     if (direction === "in") {
@@ -18,11 +18,11 @@ export function KnowledgeGraph() {
       setZoom(Math.max(zoom - 0.2, 0.5));
     }
   };
-  
+
   // Function to reset graph layout
   const resetGraph = () => {
     if (!svgRef.current || nodes.length === 0) return;
-    
+
     // This will re-trigger the useEffect to redraw the graph
     setZoom(1);
   };
@@ -36,10 +36,9 @@ export function KnowledgeGraph() {
 
     // Clear any existing graph
     svg.selectAll("*").remove();
-    
+
     // Apply zoom transform
-    const g = svg.append("g")
-      .attr("transform", `scale(${zoom})`);
+    const g = svg.append("g").attr("transform", `scale(${zoom})`);
 
     // Create force simulation
     const simulation = d3
@@ -91,8 +90,8 @@ export function KnowledgeGraph() {
       .append("circle")
       .attr("r", 8)
       .attr("fill", (d) => color(d.group))
-      .attr("stroke", (d) => d.id === selectedNode ? "#ff6b6b" : "#fff")
-      .attr("stroke-width", (d) => d.id === selectedNode ? 3 : 1);
+      .attr("stroke", (d) => (d.id === selectedNode ? "#ff6b6b" : "#fff"))
+      .attr("stroke-width", (d) => (d.id === selectedNode ? 3 : 1));
 
     // Add labels to nodes
     node
@@ -139,21 +138,21 @@ export function KnowledgeGraph() {
   return (
     <div className="h-full w-full bg-white dark:bg-gray-800 rounded-lg flex flex-col">
       <div className="flex justify-end gap-2 p-2">
-        <button 
+        <button
           onClick={() => handleZoom("in")}
           className="p-1 bg-gray-100 dark:bg-gray-700 rounded-md"
           aria-label="Zoom in"
         >
           <ZoomIn size={16} />
         </button>
-        <button 
+        <button
           onClick={() => handleZoom("out")}
           className="p-1 bg-gray-100 dark:bg-gray-700 rounded-md"
           aria-label="Zoom out"
         >
           <ZoomOut size={16} />
         </button>
-        <button 
+        <button
           onClick={resetGraph}
           className="p-1 bg-gray-100 dark:bg-gray-700 rounded-md"
           aria-label="Reset graph"
@@ -161,7 +160,7 @@ export function KnowledgeGraph() {
           <RefreshCw size={16} />
         </button>
       </div>
-      
+
       <div className="flex-1 overflow-hidden">
         {nodes.length === 0 ? (
           <div className="h-full flex items-center justify-center text-center p-4">
@@ -173,11 +172,11 @@ export function KnowledgeGraph() {
           <svg ref={svgRef} className="h-full w-full overflow-visible" />
         )}
       </div>
-      
+
       {selectedNode && (
         <div className="p-3 border-t">
           <h3 className="font-medium text-sm">
-            {nodes.find(n => n.id === selectedNode)?.label}
+            {nodes.find((n) => n.id === selectedNode)?.label}
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Click on this node to explore related concepts
