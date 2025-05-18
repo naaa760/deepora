@@ -1,12 +1,31 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { useGraphStore } from "@/store/graphStore";
+import { ZoomIn, ZoomOut, RefreshCw } from "lucide-react";
 
 export function KnowledgeGraph() {
   const svgRef = useRef(null);
-  const { nodes, links, setSelectedNode } = useGraphStore();
+  const { nodes, links, setSelectedNode, selectedNode } = useGraphStore();
+  const [zoom, setZoom] = useState(1);
+  
+  // Function to handle zoom in/out
+  const handleZoom = (direction) => {
+    if (direction === "in") {
+      setZoom(Math.min(zoom + 0.2, 2));
+    } else {
+      setZoom(Math.max(zoom - 0.2, 0.5));
+    }
+  };
+  
+  // Function to reset graph layout
+  const resetGraph = () => {
+    if (!svgRef.current || nodes.length === 0) return;
+    
+    // This will re-trigger the useEffect to redraw the graph
+    setZoom(1);
+  };
 
   useEffect(() => {
     if (!svgRef.current || nodes.length === 0) return;
@@ -17,6 +36,10 @@ export function KnowledgeGraph() {
 
     // Clear any existing graph
     svg.selectAll("*").remove();
+    
+    // Apply zoom transform
+    const g = svg.append("g")
+      .attr("transform", `scale(${zoom})`);
 
     // Create force simulation
     const simulation = d3
@@ -29,13 +52,13 @@ export function KnowledgeGraph() {
           .distance(70)
       )
       .force("charge", d3.forceManyBody().strength(-200))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("center", d3.forceCenter(width / (2 * zoom), height / (2 * zoom)));
 
     // Define color scale
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     // Create links
-    const link = svg
+    const link = g
       .append("g")
       .selectAll("line")
       .data(links)
@@ -46,7 +69,7 @@ export function KnowledgeGraph() {
       .attr("stroke-width", (d) => Math.sqrt(d.value));
 
     // Create nodes
-    const node = svg
+    const node = g
       .append("g")
       .selectAll("g")
       .data(nodes)
@@ -67,7 +90,9 @@ export function KnowledgeGraph() {
     node
       .append("circle")
       .attr("r", 8)
-      .attr("fill", (d) => color(d.group));
+      .attr("fill", (d) => color(d.group))
+      .attr("stroke", (d) => d.id === selectedNode ? "#ff6b6b" : "#fff")
+      .attr("stroke-width", (d) => d.id === selectedNode ? 3 : 1);
 
     // Add labels to nodes
     node
@@ -109,18 +134,55 @@ export function KnowledgeGraph() {
     return () => {
       simulation.stop();
     };
-  }, [nodes, links, setSelectedNode]);
+  }, [nodes, links, setSelectedNode, selectedNode, zoom]);
 
   return (
-    <div className="h-full w-full bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center">
-      {nodes.length === 0 ? (
-        <div className="text-center p-4">
-          <p className="text-gray-500 dark:text-gray-400">
-            Ask a question to generate a knowledge graph
+    <div className="h-full w-full bg-white dark:bg-gray-800 rounded-lg flex flex-col">
+      <div className="flex justify-end gap-2 p-2">
+        <button 
+          onClick={() => handleZoom("in")}
+          className="p-1 bg-gray-100 dark:bg-gray-700 rounded-md"
+          aria-label="Zoom in"
+        >
+          <ZoomIn size={16} />
+        </button>
+        <button 
+          onClick={() => handleZoom("out")}
+          className="p-1 bg-gray-100 dark:bg-gray-700 rounded-md"
+          aria-label="Zoom out"
+        >
+          <ZoomOut size={16} />
+        </button>
+        <button 
+          onClick={resetGraph}
+          className="p-1 bg-gray-100 dark:bg-gray-700 rounded-md"
+          aria-label="Reset graph"
+        >
+          <RefreshCw size={16} />
+        </button>
+      </div>
+      
+      <div className="flex-1 overflow-hidden">
+        {nodes.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-center p-4">
+            <p className="text-gray-500 dark:text-gray-400">
+              Ask a question to generate a knowledge graph
+            </p>
+          </div>
+        ) : (
+          <svg ref={svgRef} className="h-full w-full overflow-visible" />
+        )}
+      </div>
+      
+      {selectedNode && (
+        <div className="p-3 border-t">
+          <h3 className="font-medium text-sm">
+            {nodes.find(n => n.id === selectedNode)?.label}
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Click on this node to explore related concepts
           </p>
         </div>
-      ) : (
-        <svg ref={svgRef} className="h-full w-full overflow-visible" />
       )}
     </div>
   );

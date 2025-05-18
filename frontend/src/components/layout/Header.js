@@ -3,13 +3,13 @@
 import { useUser, UserButton } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { Moon, Sun } from "lucide-react";
-import { useState } from "react";
+import { Moon, Sun, Scale } from "lucide-react";
+import { useDebateStore } from "@/store/debateStore";
 
 export function Header() {
   const { user, isLoaded } = useUser();
   const { setTheme, theme } = useTheme();
-  const [debateMode, setDebateMode] = useState(false);
+  const { isDebateMode, setDebateMode } = useDebateStore();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -22,14 +22,15 @@ export function Header() {
 
         <div className="flex items-center gap-4">
           <button
-            className={`px-3 py-1 rounded-md ${
-              debateMode
+            className={`px-3 py-1 rounded-md flex items-center gap-2 ${
+              isDebateMode
                 ? "bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-100"
                 : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
             }`}
-            onClick={() => setDebateMode(!debateMode)}
+            onClick={() => setDebateMode(!isDebateMode)}
             aria-label="Toggle debate mode"
           >
+            <Scale className="h-4 w-4" />
             Debate Mode
           </button>
 
